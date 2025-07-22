@@ -1,0 +1,13 @@
+product: jvm/app
+settings:
+  kotlin:
+    languageVersion: 2.2
+  jvm:
+    mainClass: com.github.kleewho.lenspb.MainKt
+
+dependencies:
+  - com.squareup:kotlinpoet:2.2.0
+  - com.google.protobuf:protobuf-java:4.31.1
+  - com.google.protobuf:protobuf-kotlin:4.31.1
+  - io.arrow-kt:arrow-optics:2.1.2
+  - io.kotest:kotest-assertions-core-jvm:6.0.0.M5

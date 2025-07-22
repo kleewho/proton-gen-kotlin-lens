@@ -1,0 +1,11 @@
+**/build/
+!**/src/**/build/
+
+!amper
+!amper.bat
+!*.yaml
+
+# Cache of project
+.gradletasknamecache
+
+.idea
