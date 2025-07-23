@@ -117,6 +117,7 @@ fun Descriptors.Descriptor.generateMessageType(): TypeSpec {
         }
         builder.addProperty(field.generateLensProperty(this))
     }
+
     return builder.build()
 }
 
@@ -154,7 +155,13 @@ fun Descriptors.FieldDescriptor.generateLensProperty(messageDescriptor: Descript
         else -> ANY
     }
 
-    val parametrizedLensType = Lens::class.asClassName().parameterizedBy(rootClassName, rootClassName, fieldTypeName, fieldTypeName)
+    val parametrizedLensType = when {
+        isRepeated -> {
+            val listType = List::class.asClassName().parameterizedBy(fieldTypeName)
+            Lens::class.asClassName().parameterizedBy(rootClassName, rootClassName, listType, listType)
+        }
+        else -> Lens::class.asClassName().parameterizedBy(rootClassName, rootClassName, fieldTypeName, fieldTypeName)
+    }
     val propertySpecBuilder = PropertySpec.builder(name = lensPropertyName(), type = parametrizedLensType)
     propertySpecBuilder.initializer(CodeBlock.of("%T(get = { it.%N }, set = { it, v -> it.newBuilderForType().%N(v).build() })", parametrizedLensType, fieldJavaName(), builderSetterName()))
     return propertySpecBuilder.build()

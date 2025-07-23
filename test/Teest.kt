@@ -32,6 +32,16 @@ class Teest {
                 "val `internal`: arrow.optics.PLens<com.github.kleewho.gen.test.Source, com.github.kleewho.gen.test.Source, com.github.kleewho.gen.test.Internal, com.github.kleewho.gen.test.Internal> = arrow.optics.PLens<com.github.kleewho.gen.test.Source, com.github.kleewho.gen.test.Source, com.github.kleewho.gen.test.Internal, com.github.kleewho.gen.test.Internal>(get = { it.`internal` }, set = { it, v -> it.newBuilderForType().setInternal(v).build() })\n"
     }
 
+
+    @Test
+    fun addPropertyForRepeatedField() {
+        val fieldDescriptor = Internal.getDescriptor().findFieldByName("repeated_int")
+
+        val generatedProperty = fieldDescriptor.generateLensProperty(Internal.getDescriptor()).toString()
+
+        generatedProperty shouldBe
+                "val repeatedInt: arrow.optics.PLens<com.github.kleewho.gen.test.Internal, com.github.kleewho.gen.test.Internal, kotlin.collections.List<kotlin.Long>, kotlin.collections.List<kotlin.Long>> = arrow.optics.PLens<com.github.kleewho.gen.test.Internal, com.github.kleewho.gen.test.Internal, kotlin.collections.List<kotlin.Long>, kotlin.collections.List<kotlin.Long>>(get = { it.repeatedInt }, set = { it, v -> it.newBuilderForType().setRepeatedInt(v).build() })\n"
+    }
 //    @Test
 //    fun aaaaa() {
 //        val newVal = SourceLenses.fieldString1Lens.set(Source.newBuilder().build(), "aaa")
