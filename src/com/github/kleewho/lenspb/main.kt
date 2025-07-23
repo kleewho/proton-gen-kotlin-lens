@@ -17,6 +17,8 @@ package com.github.kleewho.lenspb
 import arrow.optics.Lens
 import com.google.protobuf.Descriptors
 import com.google.protobuf.compiler.PluginProtos
+import com.squareup.kotlinpoet.ANY
+import com.squareup.kotlinpoet.BOOLEAN
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.DOUBLE
@@ -145,10 +147,13 @@ fun Descriptors.FieldDescriptor.generateLensProperty(messageDescriptor: Descript
         Descriptors.FieldDescriptor.JavaType.INT -> INT
         Descriptors.FieldDescriptor.JavaType.LONG -> LONG
         Descriptors.FieldDescriptor.JavaType.FLOAT -> FLOAT
+        Descriptors.FieldDescriptor.JavaType.DOUBLE -> DOUBLE
         Descriptors.FieldDescriptor.JavaType.STRING -> STRING
+        Descriptors.FieldDescriptor.JavaType.BOOLEAN -> BOOLEAN
         Descriptors.FieldDescriptor.JavaType.MESSAGE -> this.messageType.resolveClassName()
-        else -> DOUBLE
+        else -> ANY
     }
+
     val parametrizedLensType = Lens::class.asClassName().parameterizedBy(rootClassName, rootClassName, fieldTypeName, fieldTypeName)
     val propertySpecBuilder = PropertySpec.builder(name = lensPropertyName(), type = parametrizedLensType)
     propertySpecBuilder.initializer(CodeBlock.of("%T(get = { it.%N }, set = { it, v -> it.newBuilderForType().%N(v).build() })", parametrizedLensType, fieldJavaName(), builderSetterName()))
