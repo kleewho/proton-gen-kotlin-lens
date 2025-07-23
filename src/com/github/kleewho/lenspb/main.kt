@@ -127,7 +127,7 @@ fun Descriptors.FieldDescriptor.builderSetterName(): String {
 }
 
 fun Descriptors.FieldDescriptor.lensPropertyName(): String {
-    return name.toCamelCase() + "Lens"
+    return name.toCamelCase()
 }
 
 fun String.toPascalCase(): String {
@@ -140,12 +140,13 @@ fun String.toCamelCase(): String {
 }
 
 fun Descriptors.FieldDescriptor.generateLensProperty(messageDescriptor: Descriptors.Descriptor): PropertySpec {
-    val rootClassName = ClassName(messageDescriptor.file.options.javaPackage, messageDescriptor.name)
+    val rootClassName = messageDescriptor.resolveClassName()
     val fieldTypeName = when(javaType) {
         Descriptors.FieldDescriptor.JavaType.INT -> INT
         Descriptors.FieldDescriptor.JavaType.LONG -> LONG
         Descriptors.FieldDescriptor.JavaType.FLOAT -> FLOAT
         Descriptors.FieldDescriptor.JavaType.STRING -> STRING
+        Descriptors.FieldDescriptor.JavaType.MESSAGE -> this.messageType.resolveClassName()
         else -> DOUBLE
     }
     val parametrizedLensType = Lens::class.asClassName().parameterizedBy(rootClassName, rootClassName, fieldTypeName, fieldTypeName)
