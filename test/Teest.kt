@@ -1,5 +1,8 @@
 package com.github.kleewho.lenspb
 
+import arrow.optics.PLens
+import com.github.kleewho.gen.test.Action
+import com.github.kleewho.gen.test.ActionLenses
 import com.github.kleewho.gen.test.Internal
 import com.github.kleewho.gen.test.OtherTarget
 import com.github.kleewho.gen.test.Source
@@ -7,10 +10,6 @@ import io.kotest.matchers.shouldBe
 import kotlin.test.Test
 
 class Teest {
-    val fieldString1Lens: arrow.optics.PLens<com.github.kleewho.gen.test.Source, com.github.kleewho.gen.test.Source, kotlin.String, kotlin.String> = arrow.optics.PLens<com.github.kleewho.gen.test.Source, com.github.kleewho.gen.test.Source, kotlin.String, kotlin.String>(get = {
-        it.fieldString1
-    }, set = { r, f -> r.newBuilderForType().setFieldString1(f).build()})
-
     @Test
     fun addPropertyLensTest() {
         val fieldDescriptor = Source.getDescriptor().findFieldByName("field_string_1")
@@ -53,10 +52,36 @@ class Teest {
         generatedProperty shouldBe
                 "val fieldMap: arrow.optics.PLens<com.github.kleewho.gen.test.OtherTarget, com.github.kleewho.gen.test.OtherTarget, kotlin.collections.Map<kotlin.String, kotlin.Long>, kotlin.collections.Map<kotlin.String, kotlin.Long>> = arrow.optics.PLens<com.github.kleewho.gen.test.OtherTarget, com.github.kleewho.gen.test.OtherTarget, kotlin.collections.Map<kotlin.String, kotlin.Long>, kotlin.collections.Map<kotlin.String, kotlin.Long>>(get = { it.fieldMapMap }, set = { it, v -> it.newBuilderForType().clearFieldMap().putAllFieldMap(v).build() })\n"
     }
-//    @Test
-//    fun aaaaa() {
-//        val newVal = SourceLenses.fieldString1Lens.set(Source.newBuilder().build(), "aaa")
-//        println(newVal)
-//    }
 
+    @Test
+    fun generateNestedMessages() {
+        val descriptor = Action.getDescriptor()
+
+        val generatedObject = descriptor.generateMessageType().toString()
+
+        generatedObject shouldBe """public object ActionLenses {
+  public val metadata: arrow.optics.PLens<com.github.kleewho.gen.test.Action, com.github.kleewho.gen.test.Action, com.github.kleewho.gen.test.Action.Metadata, com.github.kleewho.gen.test.Action.Metadata> = arrow.optics.PLens<com.github.kleewho.gen.test.Action, com.github.kleewho.gen.test.Action, com.github.kleewho.gen.test.Action.Metadata, com.github.kleewho.gen.test.Action.Metadata>(get = { it.metadata }, set = { it, v -> it.newBuilderForType().setMetadata(v).build() })
+
+  public val `data`: arrow.optics.PLens<com.github.kleewho.gen.test.Action, com.github.kleewho.gen.test.Action, com.github.kleewho.gen.test.Action.Data, com.github.kleewho.gen.test.Action.Data> = arrow.optics.PLens<com.github.kleewho.gen.test.Action, com.github.kleewho.gen.test.Action, com.github.kleewho.gen.test.Action.Data, com.github.kleewho.gen.test.Action.Data>(get = { it.`data` }, set = { it, v -> it.newBuilderForType().setData(v).build() })
+
+  public object MetadataLenses {
+    public val id: arrow.optics.PLens<com.github.kleewho.gen.test.Action.Metadata, com.github.kleewho.gen.test.Action.Metadata, kotlin.String, kotlin.String> = arrow.optics.PLens<com.github.kleewho.gen.test.Action.Metadata, com.github.kleewho.gen.test.Action.Metadata, kotlin.String, kotlin.String>(get = { it.id }, set = { it, v -> it.newBuilderForType().setId(v).build() })
+  }
+
+  public object DataLenses {
+    public val action: arrow.optics.PLens<com.github.kleewho.gen.test.Action.Data, com.github.kleewho.gen.test.Action.Data, com.github.kleewho.gen.test.Action.Config, com.github.kleewho.gen.test.Action.Config> = arrow.optics.PLens<com.github.kleewho.gen.test.Action.Data, com.github.kleewho.gen.test.Action.Data, com.github.kleewho.gen.test.Action.Config, com.github.kleewho.gen.test.Action.Config>(get = { it.action }, set = { it, v -> it.newBuilderForType().setAction(v).build() })
+
+    public val event: arrow.optics.PLens<com.github.kleewho.gen.test.Action.Data, com.github.kleewho.gen.test.Action.Data, com.github.kleewho.gen.test.Action.Event, com.github.kleewho.gen.test.Action.Event> = arrow.optics.PLens<com.github.kleewho.gen.test.Action.Data, com.github.kleewho.gen.test.Action.Data, com.github.kleewho.gen.test.Action.Event, com.github.kleewho.gen.test.Action.Event>(get = { it.event }, set = { it, v -> it.newBuilderForType().setEvent(v).build() })
+  }
+
+  public object ConfigLenses {
+    public val topic: arrow.optics.PLens<com.github.kleewho.gen.test.Action.Config, com.github.kleewho.gen.test.Action.Config, kotlin.String, kotlin.String> = arrow.optics.PLens<com.github.kleewho.gen.test.Action.Config, com.github.kleewho.gen.test.Action.Config, kotlin.String, kotlin.String>(get = { it.topic }, set = { it, v -> it.newBuilderForType().setTopic(v).build() })
+  }
+
+  public object EventLenses {
+    public val type: arrow.optics.PLens<com.github.kleewho.gen.test.Action.Event, com.github.kleewho.gen.test.Action.Event, kotlin.String, kotlin.String> = arrow.optics.PLens<com.github.kleewho.gen.test.Action.Event, com.github.kleewho.gen.test.Action.Event, kotlin.String, kotlin.String>(get = { it.type }, set = { it, v -> it.newBuilderForType().setType(v).build() })
+  }
+}
+"""
+    }
 }

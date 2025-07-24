@@ -117,6 +117,8 @@ fun Descriptors.Descriptor.generateMessageType(): TypeSpec {
         builder.addProperty(field.generateLensProperty(this))
     }
 
+    nestedTypes.map(Descriptors.Descriptor::generateMessageType).forEach { builder.addType(it) }
+
     return builder.build()
 }
 
