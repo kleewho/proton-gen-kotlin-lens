@@ -20,14 +20,25 @@ import com.squareup.kotlinpoet.ClassName
 fun Descriptors.Descriptor.resolveClassName(): ClassName {
     val resolvedPackage = if (file.options.hasJavaPackage()) file.options.javaPackage else file.`package`
 
+    val names = mutableListOf<String>()
+    var desc = this
+    while (true) {
+        names.add(desc.name)
+        if (desc.containingType == null) {
+            break
+        }
+        desc = desc.containingType
+    }
+    names.reverse()
+
     return when {
-        file.options.javaMultipleFiles -> ClassName(resolvedPackage, name)
-        file.options.hasJavaOuterClassname() -> ClassName(resolvedPackage, file.options.javaOuterClassname, name)
+        file.options.javaMultipleFiles -> ClassName(resolvedPackage, names)
+        file.options.hasJavaOuterClassname() -> ClassName(resolvedPackage, file.options.javaOuterClassname + names)
         else -> {
             val outerClassName = file.name.substringBefore(".proto").toPascalCase()
             when {
-                file.messageTypes.any { it.name == outerClassName } -> ClassName(resolvedPackage, "${outerClassName}OuterClass", name)
-                else -> ClassName(resolvedPackage, outerClassName, name)
+                file.messageTypes.any { it.name == outerClassName } -> ClassName(resolvedPackage, "${outerClassName}OuterClass" + names)
+                else -> ClassName(resolvedPackage, outerClassName + names)
             }
         }
     }
