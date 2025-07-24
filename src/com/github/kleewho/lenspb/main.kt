@@ -188,26 +188,28 @@ fun Descriptors.FieldDescriptor.generateLensPropertyForRepeatedField(rootClassNa
     return propertySpecBuilder.build()
 }
 
+fun Descriptors.FieldDescriptor.generateLensProperty(rootClassName: TypeName): PropertySpec {
+    val fieldTypeName = kotlinPoetTypeName()
+    val parametrizedLensType =
+        Lens::class.asClassName().parameterizedBy(rootClassName, rootClassName, fieldTypeName, fieldTypeName)
+    val propertySpecBuilder = PropertySpec.builder(name = lensPropertyName(), type = parametrizedLensType)
+    propertySpecBuilder.initializer(
+        CodeBlock.of(
+            "%T(get = { it.%N }, set = { it, v -> it.newBuilderForType().%N(v).build() })",
+            parametrizedLensType,
+            fieldJavaName(),
+            builderSetterName()
+        )
+    )
+    return propertySpecBuilder.build()
+}
+
 fun Descriptors.FieldDescriptor.generateLensProperty(messageDescriptor: Descriptors.Descriptor): PropertySpec {
     val rootClassName = messageDescriptor.resolveClassName()
 
     return when {
         isMapField -> generateLensPropertyForMapField(rootClassName)
         isRepeated -> generateLensPropertyForRepeatedField(rootClassName)
-        else -> {
-            val fieldTypeName = kotlinPoetTypeName()
-            val parametrizedLensType =
-                Lens::class.asClassName().parameterizedBy(rootClassName, rootClassName, fieldTypeName, fieldTypeName)
-            val propertySpecBuilder = PropertySpec.builder(name = lensPropertyName(), type = parametrizedLensType)
-            propertySpecBuilder.initializer(
-                CodeBlock.of(
-                    "%T(get = { it.%N }, set = { it, v -> it.newBuilderForType().%N(v).build() })",
-                    parametrizedLensType,
-                    fieldJavaName(),
-                    builderSetterName()
-                )
-            )
-            propertySpecBuilder.build()
-        }
+        else -> generateLensProperty(rootClassName)
     }
 }
