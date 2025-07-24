@@ -19,7 +19,6 @@ import com.google.protobuf.Descriptors
 import com.google.protobuf.compiler.PluginProtos
 import com.squareup.kotlinpoet.ANY
 import com.squareup.kotlinpoet.BOOLEAN
-import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.DOUBLE
 import com.squareup.kotlinpoet.FLOAT
@@ -142,20 +141,30 @@ fun String.toCamelCase(): String {
     return split.first() + split.drop(1).joinToString("") { it.replaceFirstChar(Char::uppercaseChar) }
 }
 
-fun Descriptors.FieldDescriptor.generateLensProperty(messageDescriptor: Descriptors.Descriptor): PropertySpec {
-    val rootClassName = messageDescriptor.resolveClassName()
-    val fieldTypeName = when(javaType) {
+fun Descriptors.FieldDescriptor.kotlinPoetTypeName(): TypeName {
+    return when(javaType) {
         Descriptors.FieldDescriptor.JavaType.INT -> INT
         Descriptors.FieldDescriptor.JavaType.LONG -> LONG
         Descriptors.FieldDescriptor.JavaType.FLOAT -> FLOAT
         Descriptors.FieldDescriptor.JavaType.DOUBLE -> DOUBLE
         Descriptors.FieldDescriptor.JavaType.STRING -> STRING
         Descriptors.FieldDescriptor.JavaType.BOOLEAN -> BOOLEAN
-        Descriptors.FieldDescriptor.JavaType.MESSAGE -> this.messageType.resolveClassName()
+        Descriptors.FieldDescriptor.JavaType.MESSAGE -> messageType.resolveClassName()
         else -> ANY
     }
+}
+
+fun Descriptors.FieldDescriptor.generateLensProperty(messageDescriptor: Descriptors.Descriptor): PropertySpec {
+    val rootClassName = messageDescriptor.resolveClassName()
+    val fieldTypeName = kotlinPoetTypeName()
 
     val parametrizedLensType = when {
+        isMapField -> {
+            val keyTypeName = messageType.findFieldByNumber(1).kotlinPoetTypeName()
+            val valueTypeName = messageType.findFieldByNumber(2).kotlinPoetTypeName()
+            val mapType = Map::class.asClassName().parameterizedBy(keyTypeName, valueTypeName)
+            Lens::class.asClassName().parameterizedBy(rootClassName, rootClassName, mapType, mapType)
+        }
         isRepeated -> {
             val listType = List::class.asClassName().parameterizedBy(fieldTypeName)
             Lens::class.asClassName().parameterizedBy(rootClassName, rootClassName, listType, listType)
