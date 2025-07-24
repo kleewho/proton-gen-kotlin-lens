@@ -142,7 +142,7 @@ fun String.toCamelCase(): String {
 }
 
 fun Descriptors.FieldDescriptor.kotlinPoetTypeName(): TypeName {
-    return when(javaType) {
+    return when (javaType) {
         Descriptors.FieldDescriptor.JavaType.INT -> INT
         Descriptors.FieldDescriptor.JavaType.LONG -> LONG
         Descriptors.FieldDescriptor.JavaType.FLOAT -> FLOAT
@@ -154,24 +154,60 @@ fun Descriptors.FieldDescriptor.kotlinPoetTypeName(): TypeName {
     }
 }
 
+fun Descriptors.FieldDescriptor.generateLensPropertyForMapField(rootClassName: TypeName): PropertySpec {
+    val keyTypeName = messageType.findFieldByNumber(1).kotlinPoetTypeName()
+    val valueTypeName = messageType.findFieldByNumber(2).kotlinPoetTypeName()
+    val mapType = Map::class.asClassName().parameterizedBy(keyTypeName, valueTypeName)
+    val parametrizedLensType = Lens::class.asClassName().parameterizedBy(rootClassName, rootClassName, mapType, mapType)
+    val propertySpecBuilder = PropertySpec.builder(name = lensPropertyName(), type = parametrizedLensType)
+    propertySpecBuilder.initializer(
+        CodeBlock.of(
+            "%1T(get = { it.%2NMap }, set = { it, v -> it.newBuilderForType().clear%3N().putAll%3N(v).build() })",
+            parametrizedLensType,
+            fieldJavaName(),
+            name.toPascalCase()
+        )
+    )
+    return propertySpecBuilder.build()
+}
+
+fun Descriptors.FieldDescriptor.generateLensPropertyForRepeatedField(rootClassName: TypeName): PropertySpec {
+    val fieldTypeName = kotlinPoetTypeName()
+    val listType = List::class.asClassName().parameterizedBy(fieldTypeName)
+    val parametrizedLensType =
+        Lens::class.asClassName().parameterizedBy(rootClassName, rootClassName, listType, listType)
+    val propertySpecBuilder = PropertySpec.builder(name = lensPropertyName(), type = parametrizedLensType)
+    propertySpecBuilder.initializer(
+        CodeBlock.of(
+            "%1T(get = { it.%2NList }, set = { it, v -> it.newBuilderForType().clear%3N().addAll%3N(v).build() })",
+            parametrizedLensType,
+            fieldJavaName(),
+            name.toPascalCase()
+        )
+    )
+    return propertySpecBuilder.build()
+}
+
 fun Descriptors.FieldDescriptor.generateLensProperty(messageDescriptor: Descriptors.Descriptor): PropertySpec {
     val rootClassName = messageDescriptor.resolveClassName()
-    val fieldTypeName = kotlinPoetTypeName()
 
-    val parametrizedLensType = when {
-        isMapField -> {
-            val keyTypeName = messageType.findFieldByNumber(1).kotlinPoetTypeName()
-            val valueTypeName = messageType.findFieldByNumber(2).kotlinPoetTypeName()
-            val mapType = Map::class.asClassName().parameterizedBy(keyTypeName, valueTypeName)
-            Lens::class.asClassName().parameterizedBy(rootClassName, rootClassName, mapType, mapType)
+    return when {
+        isMapField -> generateLensPropertyForMapField(rootClassName)
+        isRepeated -> generateLensPropertyForRepeatedField(rootClassName)
+        else -> {
+            val fieldTypeName = kotlinPoetTypeName()
+            val parametrizedLensType =
+                Lens::class.asClassName().parameterizedBy(rootClassName, rootClassName, fieldTypeName, fieldTypeName)
+            val propertySpecBuilder = PropertySpec.builder(name = lensPropertyName(), type = parametrizedLensType)
+            propertySpecBuilder.initializer(
+                CodeBlock.of(
+                    "%T(get = { it.%N }, set = { it, v -> it.newBuilderForType().%N(v).build() })",
+                    parametrizedLensType,
+                    fieldJavaName(),
+                    builderSetterName()
+                )
+            )
+            propertySpecBuilder.build()
         }
-        isRepeated -> {
-            val listType = List::class.asClassName().parameterizedBy(fieldTypeName)
-            Lens::class.asClassName().parameterizedBy(rootClassName, rootClassName, listType, listType)
-        }
-        else -> Lens::class.asClassName().parameterizedBy(rootClassName, rootClassName, fieldTypeName, fieldTypeName)
     }
-    val propertySpecBuilder = PropertySpec.builder(name = lensPropertyName(), type = parametrizedLensType)
-    propertySpecBuilder.initializer(CodeBlock.of("%T(get = { it.%N }, set = { it, v -> it.newBuilderForType().%N(v).build() })", parametrizedLensType, fieldJavaName(), builderSetterName()))
-    return propertySpecBuilder.build()
 }
