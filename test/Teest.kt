@@ -1,8 +1,6 @@
 package com.github.kleewho.lenspb
 
-import arrow.optics.PLens
 import com.github.kleewho.gen.test.Action
-import com.github.kleewho.gen.test.ActionLenses
 import com.github.kleewho.gen.test.Internal
 import com.github.kleewho.gen.test.OtherTarget
 import com.github.kleewho.gen.test.Source
